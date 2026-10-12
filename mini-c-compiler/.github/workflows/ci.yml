@@ -1,0 +1,30 @@
+name: C++17 Compiler CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Direct G++ Compilation
+      run: |
+        cd mini-c-compiler
+        g++ -std=c++17 -Wall -Wextra -Werror main.cpp lexer.cpp parser.cpp semantic.cpp ir.cpp -o compiler
+        g++ -std=c++17 -Wall -Wextra -Werror tests/test_runner.cpp lexer.cpp parser.cpp semantic.cpp ir.cpp -o test_runner
+        ./test_runner tests/
+        ./compiler examples/basic.mc
+
+    - name: CMake Build & CTest
+      run: |
+        cd mini-c-compiler
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --config Release
+        cd build
+        ctest --output-on-failure
